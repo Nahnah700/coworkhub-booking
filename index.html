@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoworkHub - Бронирование коворкингов</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">CoworkHub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Главная</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showCabinet(); return false;">Мои бронирования</a></li>
+                </ul>
+                <button class="btn btn-light" onclick="toggleAuth()">Войти</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero с поиском -->
+    <section class="hero-section py-5 bg-light" id="heroSection">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h1 class="display-4 mb-3">Найдите идеальное место для работы</h1>
+                    <p class="lead mb-4">Бронируйте коворкинги в любом городе за минуты</p>
+                    
+                    <!-- Форма поиска -->
+                    <div class="card shadow-sm p-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <select class="form-select" id="citySelect">
+                                    <option value="">Выберите город</option>
+                                    <option value="moscow">Москва</option>
+                                    <option value="spb">Санкт-Петербург</option>
+                                    <option value="kazan">Казань</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" id="dateSelect">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="timeSelect">
+                                    <option value="">Время</option>
+                                    <option value="morning">08:00-12:00</option>
+                                    <option value="day">12:00-18:00</option>
+                                    <option value="evening">18:00-22:00</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" onclick="searchCoworking()">
+                                    Найти
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Результаты поиска -->
+    <section class="py-5" id="resultsSection" style="display: none;">
+        <div class="container">
+            <h2 class="mb-4">Доступные коворкинги</h2>
+            <div class="row" id="coworkingList">
+                <!-- Карточки генерируются JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Модальное окно бронирования -->
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Бронирование места</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Выберите место:</h6>
+                            <div class="seat-map" id="seatMap">
+                                <!-- Схема мест -->
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Детали:</h6>
+                            <p id="selectedSeat">Место не выбрано</p>
+                            <p class="h4 text-primary" id="bookingPrice">0 ₽</p>
+                            <button class="btn btn-success w-100" onclick="confirmBooking()" id="confirmBtn" disabled>
+                                Подтвердить бронь
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Личный кабинет -->
+    <section class="py-5" id="cabinetSection" style="display: none;">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Мои бронирования</h2>
+                <button class="btn btn-outline-primary" onclick="showMain()">← На главную</button>
+            </div>
+            <ul class="nav nav-tabs mb-3">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#" onclick="switchTab('active'); return false;" id="activeTab">Активные</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="switchTab('history'); return false;" id="historyTab">История</a>
+                </li>
+            </ul>
+            <div id="bookingsList">
+                <!-- Список бронирований -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Модальное окно входа/регистрации -->
+    <div class="modal fade" id="authModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="authModalTitle">Вход в систему</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Переключатель Вход/Регистрация -->
+                    <ul class="nav nav-pills nav-fill mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" onclick="switchAuthMode('login'); return false;" id="loginTab">Вход</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="switchAuthMode('register'); return false;" id="registerTab">Регистрация</a>
+                        </li>
+                    </ul>
+                    
+                    <!-- Форма входа -->
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" placeholder="name@example.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Войти</button>
+                        </div>
+                    </form>
+                    
+                    <!-- Форма регистрации (скрыта по умолчанию) -->
+                    <form id="registerForm" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Имя</label>
+                            <input type="text" class="form-control" id="regName" placeholder="Иван Иванов" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="regEmail" placeholder="name@example.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="tel" class="form-control" id="regPhone" placeholder="+7 (999) 000-00-00" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" class="form-control" id="regPassword" placeholder="Минимум 6 символов" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Повторите пароль</label>
+                            <input type="password" class="form-control" id="regPasswordConfirm" placeholder="••••••••" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно изменения бронирования -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Изменение бронирования</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <strong id="editCoworkingName"></strong><br>
+                        <small>
+                            Текущее: 📅 <span id="editCurrentDate"></span> | 
+                            🕐 <span id="editCurrentTime"></span> | 
+                            💺 <span id="editCurrentSeat"></span>
+                        </small>
+                    </div>
+                    
+                    <form id="editForm">
+                        <div class="mb-3">
+                            <label class="form-label">Новая дата</label>
+                            <input type="date" class="form-control" id="editDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Новое время</label>
+                            <select class="form-select" id="editTime" required>
+                                <option value="08:00-12:00">08:00-12:00 (Утро)</option>
+                                <option value="12:00-18:00">12:00-18:00 (День)</option>
+                                <option value="18:00-22:00">18:00-22:00 (Вечер)</option>
+                                <option value="09:00-18:00">09:00-18:00 (Полный день)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Новое место (1-8)</label>
+                            <input type="number" class="form-control" id="editSeat" min="1" max="8" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast уведомления -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">CoworkHub</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                Операция выполнена успешно!
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
